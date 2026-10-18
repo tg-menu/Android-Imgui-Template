@@ -5,19 +5,13 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Setup Android SDK
-      run: |
-        export ANDROID_SDK_ROOT=$HOME/android-sdk
-        export ANDROID_HOME=$HOME/android-sdk
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
     - name: Setup NDK
       uses: nttld/setup-ndk@v1
       with:
         ndk-version: r25c
 
-    - name: Build with ndk-build
+    - name: Build Native Libraries
       run: |
         ANDROID_MK=$(find . -name "Android.mk" | head -n 1)
         if [ -z "$ANDROID_MK" ]; then

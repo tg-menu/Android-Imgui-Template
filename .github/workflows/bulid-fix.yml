@@ -16,13 +16,15 @@ jobs:
         ndk-version: r25c
     - name: Build with CMake
       run: |
-        cd app/src/main
-        mkdir build
+        CMAKE_FILE=$(find . -name "CMakeLists.txt" | head -n 1)
+        echo "Найден CMakeLists.txt по пути: $CMAKE_FILE"
+        CMAKE_DIR=$(dirname "$CMAKE_FILE")
+        mkdir -p build
         cd build
-        cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 ..
+        cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 "$GITHUB_WORKSPACE/$CMAKE_DIR"
         make
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: libImGui
-        path: app/src/main/cpp/build/**/*.so
+        path: build/**/*.so

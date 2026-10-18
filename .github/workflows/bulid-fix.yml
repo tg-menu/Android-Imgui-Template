@@ -5,26 +5,28 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+    
     - name: Setup NDK
       uses: nttld/setup-ndk@v1
       with:
         ndk-version: r25c
-    - name: Build with CMake
+
+    - name: Build with ndk-build
       run: |
-        CMAKE_FILE=$(find . -name "CMakeLists.txt" | head -n 1)
-        echo "Найден CMakeLists.txt по пути: $CMAKE_FILE"
-        CMAKE_DIR=$(dirname "$CMAKE_FILE")
-        mkdir -p build
-        cd build
-        cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 "$GITHUB_WORKSPACE/$CMAKE_DIR"
-        make
+        # Ищем папку, где лежит Android.mk
+        ANDROID_MK=$(find . -name "Android.mk" | head -n 1)
+        if [ -z "$ANDROID_MK" ]; then
+          echo "Ошибка: Android.mk не найден!"
+          exit 1
+        fi
+        APP_DIR=$(dirname "$ANDROID_MK")
+        # Возвращаемся на уровень выше, чтобы ndk-build видел jni
+        cd "$APP_DIR"
+        cd ..
+        $ANDROID_NDK_HOME/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk APP_ABI=arm64-v8a
+
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: libImGui
-        path: build/**/*.so
+        path: libs/arm64-v8a/*.so
